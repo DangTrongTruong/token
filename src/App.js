@@ -1,42 +1,13 @@
 import { useEffect } from "react";
 import "./App.css";
-import { Button, Select } from "antd";
-const { Option } = Select;
+import { Button } from "antd";
+import { ethers } from "ethers";
+import abi from './TTVToken.json'
 
 function App() {
   useEffect(() => {
     isLogin();
   }, []);
-
-  const setupChain = async () => {
-    const bscTest = await window.ethereum.request({
-      method: "wallet_addEthereumChain",
-      params: [
-        {
-          chainId: `${Number("97")}`,
-          chainName: "Smart Chain - Testnet",
-          nativeCrrency: {
-            name: "BNB",
-            symbol: "BNB",
-            deciamal: 18,
-          },
-          rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545/"],
-          blockExplorerUrls: [" https://testnet.bscscan.com"],
-        },
-      ],
-    });
-    return bscTest;
-  };
-
-  const handleChange = (value) => {
-    if (Number(window.ethereum.networkVersion) !== value) {
-      window.ethereum.on("networkId", (networkId) => {
-        console.log("networkId", networkId);
-      });
-    } else {
-      console.log(`ban dang su dung chainId ${value}`);
-    }
-  };
 
   const isLogin = async () => {
     const currentAccount = await window.ethereum.request({
@@ -63,24 +34,45 @@ function App() {
     });
   };
 
+  const handleChange = async () => {
+    const params = [
+      {
+        chainId: `0x${Number(97).toString(16)}`,
+        chainName: "BNB TestNet",
+        nativeCurrency: {
+          name: "BNB",
+          symbol: "BNB",
+          decimal: 18,
+        },
+        rpcUrls: ["https://bsc-dataseed.binance.org/"],
+        blockExplorerUrls: ["https://bscscan.com"],
+      },
+    ];
+    await window.ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: params,
+    });
+  };
+
+  const handleClaim = async () => {
+    const ADDRESS_CONTRACT = "0x50FE8A546037986C281Aa03451E2eB3B555A7141";
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const singer = provider.getSigner();
+    const usdtContract = new ethers.Contract(ADDRESS_CONTRACT, abi.abi, singer);
+    await usdtContract.claim(10000);
+  };
+
   return (
     <div className="App">
       <Button type="primary" onClick={handleConnent}>
         Connect MetaMask
       </Button>
-      <div>
-        <Select
-          defaultValue={"title"}
-          style={{
-            width: 120,
-          }}
-          onChange={handleChange}
-        >
-          <Option value="title">Đổi mạng</Option>
-          <Option value={1}>BSC testnet</Option>
-          <Option value={97}>BSC SmartChain</Option>
-        </Select>
-      </div>
+      <Button type="primary" onClick={handleChange}>
+        Change Testnet
+      </Button>
+      <Button type="primary" onClick={handleClaim}>
+        Claim token
+      </Button>
     </div>
   );
 }
